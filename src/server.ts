@@ -73,9 +73,9 @@ class Server {
       next();
     });
 
-    this.app.use((req, res, next) => {
-      this.JWTMiddleware(req, res, next);
-    });    
+    // this.app.use((req, res, next) => {
+    //   this.JWTMiddleware(req, res, next);
+    // });    
     
   }
 
@@ -84,8 +84,8 @@ class Server {
     const router: express.Router = express.Router();
     this.app.use(expressValidator())
     this.app.use('/', router);
-    this.app.use('/api/v1/posts', PostRouter);
-    this.app.use('/api/v1/users', UserRouter);
+    this.app.use('/api/v1/posts', this.JWTMiddleware,  PostRouter);
+    this.app.use('/api/v1/users', this.JWTMiddleware, UserRouter);
     this.app.use('/api/v1/auth', AuthRouter);
   }
 }
