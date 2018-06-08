@@ -3,7 +3,10 @@
     "outDir": "./build/",
     "module": "commonjs",
     "target": "es5",
-    "sourceMap": true
+    "sourceMap": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "lib": [ "es2015" ]
   },
   "include": [
     "./src/**/*"
