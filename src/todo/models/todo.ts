@@ -1,5 +1,7 @@
 import {Entity, PrimaryGeneratedColumn, Column, BeforeInsert, ManyToOne} from "typeorm";
-import {User} from "./User";
+import {IsDate} from "class-validator";
+
+import {User} from "../../user/models/user";
 import * as bcrypt from "bcryptjs";
 
 
@@ -13,6 +15,7 @@ export class Todo {
     subject: string;
 
     @Column({nullable: true})
+    @IsDate()
     datetime: Date;
 
     @ManyToOne(type => User, user => user.todos)

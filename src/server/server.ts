@@ -10,11 +10,12 @@ import * as path from 'path';
 import {createConnection} from "typeorm";
 import expressValidator = require('express-validator')
 
-import { User } from "./models/User";
-import Auth from './authController/auth';
-import AuthRouter from './router/AuthRouter';
-import PostRouter from './router/PostRouter';
-import UserRouter from './router/UserRouter';
+import { User } from "../user/models/user";
+import Auth from '../auth/controllers/authControllers';
+import AuthRouter from '../auth/routes/authRoute';
+import ToDoRouter from '../todo/routes/todoRoute';
+import UserRouter from '../user/routes/userRoute';
+import JWTAuthMiddleware from './middlewares/JWTMiddleware';
 
 
 class Server {
@@ -27,25 +28,7 @@ class Server {
     this.config();
     this.routes();
   }
-  
-  private JWTMiddleware = (request, response, next): any => {
-    if (request.path.includes("login")) return next();
-    return Auth.authenticate((err, user, info) => {
-      if (err) { return next(err); }
-      if (!user) {
-        if (info.name === "TokenExpiredError") {
-          return response.status(401).json(
-            { message: "Your token has expired. Please generate a new one" });
-        }
-        else {
-          return response.status(401).json({ message: info.message });
-        }
-      }
-      this.app.set("user", user);
-      return next();
-    })
-    (request, response, next);
-    }
+
   // application config
   public config(): void {
 
@@ -71,11 +54,7 @@ class Server {
       res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials');
       res.header('Access-Control-Allow-Credentials', 'true');
       next();
-    });
-
-    // this.app.use((req, res, next) => {
-    //   this.JWTMiddleware(req, res, next);
-    // });    
+    });   
     
   }
 
@@ -84,8 +63,8 @@ class Server {
     const router: express.Router = express.Router();
     this.app.use(expressValidator())
     this.app.use('/', router);
-    this.app.use('/api/v1/posts', this.JWTMiddleware,  PostRouter);
-    this.app.use('/api/v1/users', this.JWTMiddleware, UserRouter);
+    this.app.use('/api/v1/todos', JWTAuthMiddleware.auth,  ToDoRouter);
+    this.app.use('/api/v1/users', JWTAuthMiddleware.auth, UserRouter);
     this.app.use('/api/v1/auth', AuthRouter);
   }
 }

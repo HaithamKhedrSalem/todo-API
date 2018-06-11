@@ -2,10 +2,10 @@ import * as jwt from "jwt-simple";
 import * as passport from "passport";
 import * as moment from "moment";
 import { Strategy, ExtractJwt } from "passport-jwt";
-import {getConnection, getRepository} from "typeorm";
+import {getConnection} from "typeorm";
 import * as bcrypt from "bcryptjs";
 
-import { User } from "../models/User";
+import { User } from "../../user/models/user";
 
 class Auth {
 
@@ -17,7 +17,7 @@ class Auth {
   public authenticate = (callback) => passport.authenticate(
     "jwt", { session: false, failWithError: true }, callback);
 
-  private genToken = (user: User): Object => {
+  public genToken = (user: User): Object => {
     let expires = moment().utc().add({ days: 7 }).unix();
     let token = jwt.encode({
         exp: expires,
@@ -25,37 +25,11 @@ class Auth {
     }, process.env.JWT_SECRET);
     return {
         token: "JWT " + token,
-        expires: moment.unix(expires).format(),
-        user: user.id
+        expires: moment.unix(expires).format()
     };
   }
 
-  public login = async (req, res) => {
-    try {
-      req.checkBody("username", "Invalid username").notEmpty();
-      req.checkBody("password", "Invalid password").notEmpty();
-      let errors = req.validationErrors();
-      if (errors){
-          throw errors;
-      }
-      let user = await getConnection().manager.findOne(
-        User, {username: req.body.username});
-      if (user === null){
-          throw "User not found"
-      };
-
-      let success = this.comparePassword(user.password, req.body.password);
-      if (success === false){
-          throw "Invalid password";
-      }
-      res.status(200).json(this.genToken(user));
-    }
-    catch (err) {           
-      res.status(401).json({ "message": "Invalid credentials", "errors": err });
-    }
-  }
-
-  private comparePassword = (
+  public comparePassword = (
       userPassword: string, candidatePassword: string): boolean => {
     return bcrypt.compareSync(candidatePassword, userPassword);
   }
@@ -70,6 +44,7 @@ class Auth {
     return new Strategy(params, async (req, payload: any, done) => {
       let user = await getConnection().manager.findOne(
         User, {username: payload.username});
+      req.app.set('user', user);
       if (user === null) {
           return done(null, false, { message: "The user in the token was not found" });
       }
