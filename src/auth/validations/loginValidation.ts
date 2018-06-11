@@ -4,7 +4,7 @@ import { LoginError } from '../errors/loginError';
 
 export class LoginValidation extends Validation {
 
-	public static dataValidation(data){
+	public dataValidation(data){
     if(!('username' in data)){
       throw new LoginError("username is required field");
     }

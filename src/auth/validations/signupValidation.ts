@@ -5,7 +5,7 @@ import * as EmailValidator from 'email-validator';
 
 export class SignupValidation extends Validation {
 
-  public static dataValidation(data){
+  public dataValidation(data){
     if(!('email' in data)){
       throw new SignupError("Email is a required field");
     }

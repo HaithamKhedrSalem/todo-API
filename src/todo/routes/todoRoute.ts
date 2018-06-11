@@ -1,7 +1,8 @@
 import { Request, Response, Router } from 'express';
 import {getConnection} from "typeorm";
 
-import { CreateToDoValidation } from '../validations/createToDoValidation';
+import { CreateTodoValidation } from '../validations/createTodoValidation';
+import { UpdateTodoValidation } from '../validations/updateTodoValidation';
 import { Todo } from '../models/todo';
 import { SuccessResponse } from "../../common/response/successResponse";
 import { ErrorResponse } from "../../common/response/errorResponse";
@@ -12,9 +13,13 @@ import { TodoError } from '../errors/todoError';
 export class ToDoRouter {
 
   public router: Router;
+  public createTodoValidation: CreateTodoValidation;
+  public updateTodoValidation: UpdateTodoValidation;
 
   constructor() {
     this.router = Router();
+    this.createTodoValidation = new CreateTodoValidation();
+    this.updateTodoValidation = new UpdateTodoValidation();
     this.routes();
   }
 
@@ -23,7 +28,7 @@ export class ToDoRouter {
     try{
       let body = req.body;
       let userObject = req.app.get('user');
-      CreateToDoValidation.dataValidation(body);
+      this.createTodoValidation.dataValidation(body);
       let todoObject = await getConnection().manager.create(
           Todo,{user: userObject, subject: body.subject,
                 datetime: body.datetime, comment: body.comment});
@@ -67,13 +72,46 @@ export class ToDoRouter {
   }
 
   public delete = async(req: Request, res: Response) => {
-    const slug: string = req.body.slug;
-    res.status(204).end();
+    try{
+      let userObject = req.app.get('user');
+      const todoID: string = req.params.todoID;
+      let todoObject = await getConnection().manager.findOne(
+        Todo, {where: { user: userObject, id: todoID}});
+      if(typeof todoObject === 'undefined'){
+        throw new TodoError("Todo with id (" + todoID + ") not found");
+      }
+      await getConnection().manager.remove(todoObject);
+      res.status(204).json();
+    }
+    catch(err){
+      let response = ErrorResponse.create(err.message, 400)
+      res.status(400).json(response);
+    }
   }
 
-  public update(req: Request, res: Response): void {
-    const slug: string = req.body.slug;
-    res.status(200).json({});
+  public update = async(req: Request, res: Response) => {
+    try{
+      const todoID: string = req.params.todoID;
+      let body = req.body;
+      let userObject = req.app.get('user');
+      this.updateTodoValidation.dataValidation(body);
+      let todoObject = await getConnection().manager.findOne(
+        Todo, {where: { user: userObject, id: todoID}});
+      if(typeof todoObject === 'undefined'){
+        throw new TodoError("Todo with id (" + todoID + ") not found");
+      }
+      todoObject.subject = body.subject;
+      todoObject.comment = body.comment;
+      todoObject.datetime = body.datetime;
+      await getConnection().manager.save(todoObject);
+      let response = SuccessResponse.create(
+          {'todo': TodoSerializer.serialize(todoObject)});
+      res.status(200).json(response);
+    }
+    catch(err){
+      let response = ErrorResponse.create(err.message, 400)
+      res.status(400).json(response);
+    }
   }
 
 

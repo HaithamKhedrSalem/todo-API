@@ -1,5 +1,5 @@
 export class Validation{
-  public static dataValidation(data){};
+  public dataValidation(data){};
 }
 
 export default new Validation();

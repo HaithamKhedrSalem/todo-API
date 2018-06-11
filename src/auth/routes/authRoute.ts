@@ -13,16 +13,20 @@ import { SuccessResponse } from "../../common/response/successResponse";
 export class AuthRouter {
 
   public router: Router;
+  public signupValidation: SignupValidation;
+  public loginValidation: LoginValidation;
 
   constructor() {
     this.router = Router();
+    this.signupValidation = new SignupValidation();
+    this.loginValidation = new LoginValidation();
     this.routes();
   }
 
   public signup = async(req: Request, res: Response) => {
     try{
       let body = req.body;
-      SignupValidation.dataValidation(body);
+      this.signupValidation.dataValidation(body);
       let userObject = await getConnection().manager.create(
         User,{username: body.username, email: body.email,
               password: body.password});
@@ -41,7 +45,7 @@ export class AuthRouter {
   public login = async(req: Request, res: Response) => {
     try{
       let body = req.body;
-      LoginValidation.dataValidation(body);
+      this.loginValidation.dataValidation(body);
       let userObject = await getConnection().manager.findOne(
         User, {username: body.username});
       if (typeof userObject === "undefined"){
