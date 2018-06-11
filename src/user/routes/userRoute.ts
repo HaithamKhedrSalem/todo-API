@@ -1,8 +1,8 @@
 import { Request, Response, Router } from 'express';
 
-import { UserSerializer } from "../controllers/userSerializer";
-import { ErrorResponse } from "../../response/errorResponse";
-import { SuccessResponse } from "../../response/successResponse";
+import { UserSerializer } from "../serializers/userSerializer";
+import { ErrorResponse } from "../../common/response/errorResponse";
+import { SuccessResponse } from "../../common/response/successResponse";
 
 
 class UserRouter {
@@ -28,7 +28,6 @@ class UserRouter {
     }
   }
 
-  // set up our routes
   public routes() {
     this.router.get('/me', this.getUser);
   }

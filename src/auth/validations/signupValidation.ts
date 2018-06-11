@@ -1,5 +1,5 @@
-import { Validation } from "./validation";
-import { SignupError } from '../error/SignupError';
+import { Validation } from "../../common/validation/validation";
+import { SignupError } from '../errors/SignupError';
 import * as EmailValidator from 'email-validator';
 
 

@@ -3,12 +3,12 @@ import {getConnection} from "typeorm";
 
 import Auth from '../controllers/authControllers';
 import { User } from "../../user/models/user";
-import { UserSerializer } from "../../user/controllers/userSerializer";
-import { SignupValidation } from "../validation/signupValidation";
-import { LoginValidation } from "../validation/loginValidation";
-import { LoginError } from '../error/loginError';
-import { ErrorResponse } from "../../response/errorResponse";
-import { SuccessResponse } from "../../response/successResponse";
+import { UserSerializer } from "../../user/serializers/userSerializer";
+import { SignupValidation } from "../validations/signupValidation";
+import { LoginValidation } from "../validations/loginValidation";
+import { LoginError } from '../errors/loginError';
+import { ErrorResponse } from "../../common/response/errorResponse";
+import { SuccessResponse } from "../../common/response/successResponse";
 
 export class AuthRouter {
 

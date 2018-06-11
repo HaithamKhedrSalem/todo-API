@@ -18,6 +18,9 @@ export class Todo {
     @IsDate()
     datetime: Date;
 
+    @Column({nullable: true})
+    comment: string;
+
     @ManyToOne(type => User, user => user.todos)
     user: User;
 }

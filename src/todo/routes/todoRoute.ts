@@ -1,4 +1,12 @@
 import { Request, Response, Router } from 'express';
+import {getConnection} from "typeorm";
+
+import { CreateToDoValidation } from '../validations/createToDoValidation';
+import { Todo } from '../models/todo';
+import { SuccessResponse } from "../../common/response/successResponse";
+import { ErrorResponse } from "../../common/response/errorResponse";
+import { TodoSerializer } from '../serializers/todoSerializer';
+import { TodoError } from '../errors/todoError';
 
 
 export class ToDoRouter {
@@ -10,40 +18,71 @@ export class ToDoRouter {
     this.routes();
   }
 
-  // get all of the todos in the database
-  public all(req: Request, res: Response): void {
-    res.status(200).json({'status': 'succccceeeeeesssssss'});
+
+  public create = async(req: Request, res: Response) => {
+    try{
+      let body = req.body;
+      let userObject = req.app.get('user');
+      CreateToDoValidation.dataValidation(body);
+      let todoObject = await getConnection().manager.create(
+          Todo,{user: userObject, subject: body.subject,
+                datetime: body.datetime, comment: body.comment});
+      todoObject = await getConnection().manager.save(todoObject);
+      let response = SuccessResponse.create(
+        {'todo': TodoSerializer.serialize(todoObject)});
+      res.status(201).json(response);
+    }
+    catch(err){
+      let response = ErrorResponse.create(err.message, 400)
+      res.status(400).json(response);
+    }
   }
 
-  // get a single todo by params of 'slug'
-  public one(req: Request, res: Response): void {
-    const slug: string = req.params.slug;
-    res.status(200).json({});
+  public all = async(req: Request, res: Response) => {
+    let userObject = req.app.get('user');
+    let todos = await getConnection().manager.find(
+      Todo, { user: userObject});
+    let response = SuccessResponse.create(
+        {'todo': TodoSerializer.serialize(todos)});
+    res.status(200).json(response);
   }
 
-  // create a new todo
-  public create(req: Request, res: Response): void {
-    res.status(200).json({});
+  public one = async(req: Request, res: Response) => {
+    try{
+      let userObject = req.app.get('user');
+      const todoID: string = req.params.todoID;
+      let todoObject = await getConnection().manager.findOne(
+        Todo, {where: { user: userObject, id: todoID}});
+      if(typeof todoObject === 'undefined'){
+        throw new TodoError("Todo with id (" + todoID + ") not found");
+      }
+      let response = SuccessResponse.create(
+          {'todo': TodoSerializer.serialize(todoObject)});
+      res.status(200).json(response);
+    }
+    catch(err){
+      let response = ErrorResponse.create(err.message, 400)
+      res.status(400).json(response);
+    }
   }
 
-  // update todo by params of 'slug'
+  public delete = async(req: Request, res: Response) => {
+    const slug: string = req.body.slug;
+    res.status(204).end();
+  }
+
   public update(req: Request, res: Response): void {
     const slug: string = req.body.slug;
     res.status(200).json({});
   }
 
-  // delete todo by params of 'slug'
-  public delete(req: Request, res: Response): void {
-    const slug: string = req.body.slug;
-    res.status(204).end();
-  }
 
   public routes() {
     this.router.get('/', this.all);
-    this.router.get('/:slug', this.one);
+    this.router.get('/:todoID', this.one);
     this.router.post('/', this.create);
-    this.router.put('/:slug', this.update);
-    this.router.delete('/:slug', this.delete);
+    this.router.put('/:todoID', this.update);
+    this.router.delete('/:todoID', this.delete);
   }
 
 }

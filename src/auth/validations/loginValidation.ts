@@ -1,5 +1,5 @@
-import { Validation } from "./validation";
-import { LoginError } from '../error/loginError';
+import { Validation } from "../../common/validation/validation";
+import { LoginError } from '../errors/loginError';
 
 
 export class LoginValidation extends Validation {
